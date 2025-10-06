@@ -1,18 +1,53 @@
-# React + Vite
+# 💤 React Lazy Load (Main Component Explanation)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+In this example, **lazy loading** is implemented in the main `App.jsx` file using `React.lazy()` and `Suspense`.
 
-Currently, two official plugins are available:
+### 📘 `App.jsx` Explanation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```jsx
+import { Suspense, useState } from "react";
+import { importFile } from "./utils/importFile";
 
-## React Compiler
+const components = [
+  { path: "todos", btnLabel: "Todos" },
+  { path: "posts", btnLabel: "Posts" },
+];
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+function App() {
+  const [component, setComponent] = useState(null);
 
-Note: This will impact Vite dev & build performances.
+  const selectComp = async (path) => {
+    const Comp = await importFile(path); // dynamically imports the component
+    setComponent(<Comp />); // sets the component to render
+  };
 
-## Expanding the ESLint configuration
+  return (
+    <div className="p-5">
+      <nav className="space-x-3">
+        {components.map((comp) => (
+          <button
+            key={comp.path}
+            onClick={() => selectComp(comp.path)}
+            className="bg-gray-600 p-2 rounded-sm"
+          >
+            {comp.btnLabel}
+          </button>
+        ))}
+      </nav>
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+      {/* Suspense shows fallback while component is being loaded */}
+      <Suspense fallback={<h2>Loading...</h2>}>{component}</Suspense>
+    </div>
+  );
+}
+
+export default App;
+```
+
+```jsx
+import React from "react";
+
+export const importFile = (file) => {
+  return React.lazy(() => import(`../components/${file}`)); // returns a promise
+};
+```
